@@ -39,4 +39,27 @@ class UserRepositoryImpl @Inject constructor(
     override suspend fun getBalance(userId: Long, currency: String): Balance? {
         return balanceDao.getBalanceForUserAndCurrency(userId, currency)
     }
+
+    override suspend fun updateBalances(userId: Long, newBalances: Map<String, Double>) {
+        // Update each balance in the database
+        newBalances.forEach { (currency, amount) ->
+            val existingBalance = getBalance(userId, currency)
+            if (existingBalance != null) {
+                // Update existing balance
+                balanceDao.updateBalance(Balance(
+                    id = existingBalance.id,
+                    userId = userId,
+                    currency = currency,
+                    amount = amount
+                ))
+            } else {
+                // Insert new balance if it doesn't exist
+                balanceDao.insertBalance(Balance(
+                    userId = userId,
+                    currency = currency,
+                    amount = amount
+                ))
+            }
+        }
+    }
 }

@@ -10,5 +10,6 @@ interface UserRepository {
     suspend fun setInitialBalances(userId: Long, initialBalances: Map<String, Double>)
     fun getBalances(userId: Long): Flow<List<Balance>>
     suspend fun updateBalance(userId: Long, currency: String, amount: Double)
+    suspend fun updateBalances(userId: Long, newBalances: Map<String, Double>)
     suspend fun getBalance(userId: Long, currency: String): Balance?
 }

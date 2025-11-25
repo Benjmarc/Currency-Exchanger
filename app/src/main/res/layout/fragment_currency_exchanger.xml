@@ -1,65 +1,213 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:padding="@dimen/margin"
-    tools:context=".presentation.CurrencyExchangerFragment">
+    android:background="@android:color/white"
+    android:fillViewport="true">
 
-    <LinearLayout
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:gravity="center"
-        android:orientation="vertical"
-        app:layout_constraintTop_toTopOf="parent">
+        android:padding="@dimen/margin">
 
+        <!-- User Name Label -->
         <TextView
-            android:layout_width="match_parent"
+            android:id="@+id/tvUserNameLabel"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:text="@string/user_name"
             android:textAllCaps="true"
             android:textSize="@dimen/text"
-            android:textStyle="bold" />
+            android:textStyle="bold"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
 
+        <!-- User Name Value -->
         <TextView
             android:id="@+id/tvUserName"
-            android:layout_width="match_parent"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
             android:textAllCaps="true"
             android:textSize="@dimen/text"
-            android:textStyle="bold" />
+            android:textStyle="bold"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/tvUserNameLabel" />
 
+        <!-- My Balances Label -->
         <TextView
-            android:layout_width="match_parent"
+            android:id="@+id/tvBalancesLabel"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/margin"
+            android:layout_marginTop="@dimen/padding"
             android:text="@string/my_balances"
             android:textAllCaps="true"
             android:textSize="@dimen/text"
-            android:textStyle="bold" />
+            android:textStyle="bold"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/tvUserName" />
 
+        <!-- Balances List -->
         <ListView
             android:id="@+id/lvBalances"
-            android:layout_width="match_parent"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
             android:divider="@android:color/darker_gray"
             android:dividerHeight="1dp"
-            android:paddingVertical="8dp" />
+            android:paddingVertical="8dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/tvBalancesLabel"
+            app:layout_constraintVertical_chainStyle="packed" />
 
+        <!-- Currency Exchange Label -->
         <TextView
-            android:layout_width="match_parent"
+            android:id="@+id/tvCurrencyExchangeLabel"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/margin"
             android:text="@string/currency_exchange"
             android:textAllCaps="true"
             android:textSize="@dimen/text"
-            android:textStyle="bold" />
+            android:textStyle="bold"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/lvBalances"
+            app:layout_constraintVertical_chainStyle="packed" />
 
+        <!-- Sell Label -->
+        <TextView
+            android:id="@+id/tvCurrencySellLabel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="8dp"
+            android:text="Sell"
+            android:textAllCaps="true"
+            android:textSize="@dimen/text"
+            android:textStyle="bold"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/tvCurrencyExchangeLabel"
+            app:layout_constraintVertical_chainStyle="packed" />
+
+        <!-- Sell Amount and Currency Dropdown Row -->
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/constraintLayout"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/padding"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@id/tvCurrencySellLabel"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/tvCurrencySellLabel">
+
+            <!-- Sell Amount Input -->
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/sellAmountLayout"
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="@dimen/padding"
+                android:hint="@string/sell_amount"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toStartOf="@+id/currencySellSpinner"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:startIconTint="@color/teal_700">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/etSellAmount"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:clickable="true"
+                    android:focusable="auto"
+                    android:focusableInTouchMode="true"
+                    android:inputType="numberDecimal"
+                    android:maxLines="1"
+                    android:textSize="16sp"
+                    tools:text="100" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <!-- Currency Spinner -->
+            <Spinner
+                android:id="@+id/currencySellSpinner"
+                android:layout_width="wrap_content"
+                android:layout_height="48dp"
+                android:layout_marginStart="16dp"
+                android:background="@drawable/spinner_background"
+                android:paddingStart="12dp"
+                android:paddingEnd="8dp"
+                android:spinnerMode="dropdown"
+                app:layout_constraintBottom_toBottomOf="@id/sellAmountLayout"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="@id/sellAmountLayout" />
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+        <!-- Sell Label -->
+        <TextView
+            android:id="@+id/tvCurrencyReceiveLabel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="@dimen/padding"
+            android:text="Receive"
+            android:textAllCaps="true"
+            android:textSize="@dimen/text"
+            android:textStyle="bold"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/constraintLayout" />
+
+        <!-- Sell Amount and Currency Dropdown Row -->
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/constraintLayoutReceive"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/tvCurrencyReceiveLabel">
+
+            <!-- Receive Amount -->
+            <TextView
+                android:id="@+id/tvReceiveAmount"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="@dimen/padding"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp"
+                android:textAllCaps="true"
+                android:textColor="@color/teal_200"
+                android:textSize="@dimen/text"
+                android:textStyle="bold"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toStartOf="@+id/currencyReceiveSpinner"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <!-- Currency Spinner -->
+            <Spinner
+                android:id="@+id/currencyReceiveSpinner"
+                android:layout_width="0dp"
+                android:layout_height="48dp"
+                android:layout_marginStart="8dp"
+                android:background="@drawable/spinner_background"
+                android:paddingStart="12dp"
+                android:paddingEnd="8dp"
+                android:spinnerMode="dropdown"
+                app:layout_constraintBottom_toBottomOf="@id/constraintLayoutReceive"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="@id/constraintLayoutReceive" />
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+        <!-- Convert Button -->
         <com.google.android.material.button.MaterialButton
-            android:id="@+id/convertButton"
+            android:id="@+id/btnConvert"
             style="@style/Widget.Material3.Button"
-            android:layout_width="match_parent"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/margin"
             android:backgroundTint="@color/teal_700"
@@ -69,6 +217,10 @@
             android:textSize="@dimen/text"
             app:cornerRadius="@dimen/radius"
             app:iconGravity="textStart"
-            app:iconTint="@color/white" />
-    </LinearLayout>
-</androidx.constraintlayout.widget.ConstraintLayout>
+            app:iconTint="@color/white"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/constraintLayoutReceive" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</ScrollView>

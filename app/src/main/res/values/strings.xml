@@ -4,4 +4,17 @@
     <string name="submit">Submit</string>
     <string name="currency_exchange">Currency Exchange</string>
     <string name="user_name">User Name :</string>
+    <string name="processing">Processing</string>
+    <string name="sell_amount">Sell Amount</string>
+
+    <!-- Validation Messages -->
+    <string name="error_select_sell_currency">Please select a currency to sell</string>
+    <string name="error_select_receive_currency">Please select a currency to receive</string>
+    <string name="error_same_currency">Cannot exchange the same currency</string>
+    <string name="error_amount_empty">Please enter an amount to exchange</string>
+    <string name="error_invalid_amount">Please enter a valid amount</string>
+    <string name="error_amount_positive">Amount must be greater than zero</string>
+    <string name="error_insufficient_balance">Insufficient balance. Available: %1$s %2$s</string>
+    <string name="error_exchange_failed">Exchange failed. Please try again.</string>
+    <string name="success_exchange">Exchange successful!</string>
 </resources>
