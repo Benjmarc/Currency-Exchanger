@@ -2,5 +2,6 @@
 <resources>
     <dimen name="margin">32dp</dimen>
     <dimen name="radius">10dp</dimen>
+    <dimen name="padding">8dp</dimen>
     <dimen name="text">16sp</dimen>
 </resources>

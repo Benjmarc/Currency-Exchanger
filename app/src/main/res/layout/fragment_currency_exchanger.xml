@@ -8,35 +8,53 @@
     tools:context=".presentation.CurrencyExchangerFragment">
 
     <LinearLayout
-        app:layout_constraintTop_toTopOf="parent"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:gravity="center"
         android:orientation="vertical"
-        android:gravity="center">
+        app:layout_constraintTop_toTopOf="parent">
 
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:text="@string/user_name"
+            android:textAllCaps="true"
+            android:textSize="@dimen/text"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/tvUserName"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textAllCaps="true"
+            android:textSize="@dimen/text"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/margin"
             android:text="@string/my_balances"
-            android:textStyle="bold"
             android:textAllCaps="true"
-            android:textSize="@dimen/text" />
+            android:textSize="@dimen/text"
+            android:textStyle="bold" />
+
+        <ListView
+            android:id="@+id/lvBalances"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:divider="@android:color/darker_gray"
+            android:dividerHeight="1dp"
+            android:paddingVertical="8dp" />
 
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="1000.00 EUR"
-            android:textStyle="bold"
-            android:textAllCaps="true"
-            android:textSize="@dimen/text" />
-
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/margin"
             android:text="@string/currency_exchange"
-            android:textStyle="bold"
             android:textAllCaps="true"
-            android:textSize="@dimen/text" />
+            android:textSize="@dimen/text"
+            android:textStyle="bold" />
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/convertButton"
