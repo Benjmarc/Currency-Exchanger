@@ -1,3 +1,7 @@
 <resources>
     <string name="app_name">Currency Exchanger</string>
+    <string name="amount">Amount</string>
+    <string name="my_balances">My Balances</string>
+    <string name="submit">Submit</string>
+    <string name="currency_exchange">Currency Exchange</string>
 </resources>
