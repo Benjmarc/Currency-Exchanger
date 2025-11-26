@@ -50,6 +50,9 @@ class CurrencyExchangerFragment : Fragment() {
         // Set up spinners
         setupSellCurrencySpinner()
         setupReceiveCurrencySpinner()
+
+        viewModel.createUserWithInitialBalances()
+        viewModel.fetchExchangeRates()
         
         // Set up submit button click listener
         binding.btnConvert.setOnClickListener {

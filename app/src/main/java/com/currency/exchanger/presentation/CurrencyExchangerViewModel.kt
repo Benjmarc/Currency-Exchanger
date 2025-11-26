@@ -1,6 +1,5 @@
 package com.currency.exchanger.presentation
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.currency.exchanger.data.remote.model.UserWithBalances
@@ -40,7 +39,6 @@ class CurrencyExchangerViewModel @Inject constructor(
             )
         }.also { errorState ->
             _errorState.value = errorState
-            Log.e(TAG, errorMessage, throwable)
         }
     }
 
@@ -55,13 +53,7 @@ class CurrencyExchangerViewModel @Inject constructor(
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading
 
-    init {
-        Log.d(TAG, "Init")
-        createUserWithInitialBalances()
-        fetchExchangeRates()
-    }
-
-    private fun fetchExchangeRates(forceRefresh: Boolean = false) {
+    fun fetchExchangeRates(forceRefresh: Boolean = false) {
         viewModelScope.launch {
             while (true) {
                 try {
@@ -69,7 +61,6 @@ class CurrencyExchangerViewModel @Inject constructor(
                     currencyExchangeUseCase.getExchangeRates(forceRefresh)
                         .collect { rates ->
                             _exchangeRates.value = rates
-                            Log.d(TAG, "Updated exchange rates: $rates")
                         }
                 } catch (e: Exception) {
                     handleError(e, "Failed to fetch exchange rates")
@@ -100,7 +91,6 @@ class CurrencyExchangerViewModel @Inject constructor(
                 }
                 currentUserId = userId
                 observeUserAndBalances(userId)
-                Log.d(TAG, "Successfully created user with ID: $userId")
             } catch (e: Exception) {
                 handleError(e, "Failed to create user or set initial balances")
             } finally {
@@ -115,7 +105,6 @@ class CurrencyExchangerViewModel @Inject constructor(
                 // Collect user data
                 userUseCase.getUser(userId).collectLatest { user ->
                     _userWithBalances.value = _userWithBalances.value.copy(user = user)
-                    Log.d(TAG, "Updated user: $user")
                 }
             } catch (e: Exception) {
                 handleError(e, "Failed to load user data")
@@ -127,7 +116,6 @@ class CurrencyExchangerViewModel @Inject constructor(
                 // Collect balances
                 userUseCase.getBalances(userId).collectLatest { balances ->
                     _userWithBalances.value = _userWithBalances.value.copy(balances = balances)
-                    Log.d(TAG, "Updated balances: $balances")
                 }
             } catch (e: Exception) {
                 handleError(e, "Failed to load balance data")
@@ -145,14 +133,12 @@ class CurrencyExchangerViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 val userId = currentUserId ?: run {
-                    Log.e(TAG, "No user ID available for exchange")
                     return@launch
                 }
 
                 // Get current exchange rates
                 val rates = _exchangeRates.value
                 if (rates.isEmpty()) {
-                    Log.e(TAG, "No exchange rates available")
                     return@launch
                 }
 
@@ -175,7 +161,6 @@ class CurrencyExchangerViewModel @Inject constructor(
 
                 // Ensure we don't go negative
                 if (updatedFromBalance < 0) {
-                    Log.e(TAG, "Insufficient balance for exchange")
                     return@launch
                 }
 
@@ -186,18 +171,15 @@ class CurrencyExchangerViewModel @Inject constructor(
                     newBalances[toCurrency] = updatedToBalance
                     userUseCase.updateBalances(userId, newBalances)
                 }
-
-                Log.d(TAG, "Exchange successful: $amount $fromCurrency -> $receivedAmount $toCurrency")
                 
             } catch (e: Exception) {
-                Log.e(TAG, "Error performing exchange", e)
                 // In a production app, you might want to show an error message to the user
+                handleError(e, "Failed to convert currency")
             }
         }
     }
 
     companion object {
-        const val TAG = "CurrencyExchangerVM"
         sealed class ErrorState(
             open val message: String
         ) {
