@@ -6,6 +6,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ArrayAdapter
 import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
@@ -13,11 +14,13 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.currency.exchanger.R
 import com.currency.exchanger.data.local.entity.Balance
-import com.currency.exchanger.data.local.entity.User
 import com.currency.exchanger.databinding.FragmentCurrencyExchangerBinding
-import com.currency.exchanger.databinding.ItemBalanceBinding
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
+import com.currency.exchanger.data.local.entity.User
+import com.currency.exchanger.databinding.ItemBalanceBinding
+import com.currency.exchanger.presentation.CurrencyExchangerViewModel.Companion.ErrorState
 import java.text.NumberFormat
 import java.util.*
 
@@ -28,6 +31,9 @@ class CurrencyExchangerFragment : Fragment() {
     private val binding get() = _binding!!
 
     private val viewModel: CurrencyExchangerViewModel by viewModels()
+    
+    private var loadingDialog: AlertDialog? = null
+    private var errorDialog: AlertDialog? = null
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -67,6 +73,22 @@ class CurrencyExchangerFragment : Fragment() {
                 }
             }
         }
+        
+        // Observe loading state
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.isLoading.collect { isLoading ->
+                    if (isLoading) {
+                        showLoading()
+                    } else {
+                        hideLoading()
+                    }
+                }
+            }
+        }
+        
+        // Observe error state
+        observeErrorState()
     }
 
     private fun updateUserInfo(user: User) {
@@ -326,9 +348,65 @@ class CurrencyExchangerFragment : Fragment() {
         ).show()
     }
 
+    private fun observeErrorState() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.errorState.collect { errorState ->
+                    errorState?.let { showErrorDialog(it) }
+                }
+            }
+        }
+    }
+    
+    private fun showErrorDialog(errorState: ErrorState) {
+        // Dismiss any existing error dialog
+        errorDialog?.dismiss()
+        
+        errorDialog = MaterialAlertDialogBuilder(requireContext())
+            .setTitle(getString(R.string.error_title))
+            .setMessage(errorState.message)
+            .setPositiveButton(getString(R.string.ok)) { dialog, _ ->
+                dialog.dismiss()
+                viewModel.clearError()
+            }
+            .setOnDismissListener {
+                viewModel.clearError()
+            }
+            .create()
+        
+        // Only show if fragment is still attached
+        if (!isDetached) {
+            errorDialog?.show()
+        }
+    }
+
     override fun onDestroyView() {
         super.onDestroyView()
+        errorDialog?.dismiss()
+        errorDialog = null
+        hideLoading()
         _binding = null
+    }
+    
+    private fun showLoading() {
+        if (loadingDialog?.isShowing == true || !isAdded || isDetached) return
+        
+        loadingDialog = MaterialAlertDialogBuilder(requireContext())
+            .setView(R.layout.dialog_loading)
+            .setCancelable(false)
+            .create()
+            
+        try {
+            loadingDialog?.show()
+        } catch (e: Exception) {
+            // Handle any potential WindowManager$BadTokenException or other issues
+            e.printStackTrace()
+        }
+    }
+    
+    private fun hideLoading() {
+        loadingDialog?.dismiss()
+        loadingDialog = null
     }
 
     companion object {

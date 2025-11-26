@@ -3,35 +3,57 @@ package com.currency.exchanger.presentation
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.currency.exchanger.data.remote.api.CurrencyApiService
 import com.currency.exchanger.data.remote.model.UserWithBalances
-import com.currency.exchanger.data.repository.UserRepository
+import com.currency.exchanger.domain.usecase.CurrencyExchangeUseCase
+import com.currency.exchanger.domain.usecase.UserUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import java.util.concurrent.TimeUnit
+import java.io.IOException
+import java.sql.SQLException
 import javax.inject.Inject
 
 @HiltViewModel
 class CurrencyExchangerViewModel @Inject constructor(
-    private val userRepository: UserRepository,
-    private val currencyApiService: CurrencyApiService
+    private val userUseCase: UserUseCase,
+    private val currencyExchangeUseCase: CurrencyExchangeUseCase
 ) : ViewModel() {
+    
+    private val _errorState = MutableStateFlow<ErrorState?>(null)
+    val errorState: StateFlow<ErrorState?> = _errorState.asStateFlow()
+    
+    private fun handleError(throwable: Throwable, errorMessage: String): ErrorState {
+        return when (throwable) {
+            is IOException -> ErrorState.NetworkError(
+                message = "Network error: $errorMessage"
+            )
+            is SQLException -> ErrorState.DatabaseError(
+                message = "Database error: $errorMessage"
+            )
+            else -> ErrorState.UnknownError(
+                message = "An error occurred: ${throwable.message ?: "Unknown error"}"
+            )
+        }.also { errorState ->
+            _errorState.value = errorState
+            Log.e(TAG, errorMessage, throwable)
+        }
+    }
 
     private val _userWithBalances = MutableStateFlow(UserWithBalances())
     val userWithBalances: StateFlow<UserWithBalances> = _userWithBalances
-    
+
     private var currentUserId: Long? = null
 
     private val _exchangeRates = MutableStateFlow<Map<String, Double>>(emptyMap())
     val exchangeRates: StateFlow<Map<String, Double>> = _exchangeRates
-    
-    private var lastFetchedTime: Long = 0
-    private val CACHE_DURATION_MS = TimeUnit.MINUTES.toMillis(30) // 30 minutes cache
+
+    private val _isLoading = MutableStateFlow(false)
+    val isLoading: StateFlow<Boolean> = _isLoading
 
     init {
         Log.d(TAG, "Init")
@@ -41,78 +63,74 @@ class CurrencyExchangerViewModel @Inject constructor(
 
     private fun fetchExchangeRates(forceRefresh: Boolean = false) {
         viewModelScope.launch {
-            try {
-                val currentTime = System.currentTimeMillis()
-                val currentRates = _exchangeRates.value
-                val isCacheValid = !forceRefresh && 
-                    currentRates.isNotEmpty() && 
-                    (currentTime - lastFetchedTime <= CACHE_DURATION_MS)
-                
-                if (isCacheValid) {
-                    Log.d(TAG, "Using cached exchange rates")
-                    return@launch
-                }
-
-                val response = withContext(Dispatchers.IO) {
-                    currencyApiService.getExchangeRates()
+            while (true) {
+                try {
+                    _isLoading.value = true
+                    currencyExchangeUseCase.getExchangeRates(forceRefresh)
+                        .collect { rates ->
+                            _exchangeRates.value = rates
+                            Log.d(TAG, "Updated exchange rates: $rates")
+                        }
+                } catch (e: Exception) {
+                    handleError(e, "Failed to fetch exchange rates")
+                } finally {
+                    _isLoading.value = false
                 }
                 
-                _exchangeRates.value = response.rates
-                lastFetchedTime = currentTime
-                Log.d(TAG, "Fetched exchange rates: ${response.rates}")
-                
-            } catch (e: Exception) {
-                Log.e(TAG, "Error fetching exchange rates", e)
-                // You might want to show an error message to the user here
+                // Wait for 5 seconds before next refresh
+                kotlinx.coroutines.delay(5000)
             }
         }
     }
-    
+
+    fun clearError() {
+        _errorState.value = null
+    }
+
     fun createUserWithInitialBalances() {
         viewModelScope.launch {
             try {
-                // Run database operations on IO dispatcher
+                _isLoading.value = true
                 val userId = withContext(Dispatchers.IO) {
-                    // Create user
-                    val id = userRepository.createUser("Benjmarc", "Somigao")
-                    // Set initial balances
-                    val initialBalances = mapOf(
-                        "EUR" to 1000.0
+                    userUseCase.createUserWithInitialBalances(
+                        "Benjmarc",
+                        "Somigao",
+                        mapOf("EUR" to 1000.0)
                     )
-                    userRepository.setInitialBalances(id, initialBalances)
-                    id
                 }
                 currentUserId = userId
                 observeUserAndBalances(userId)
                 Log.d(TAG, "Successfully created user with ID: $userId")
             } catch (e: Exception) {
-                Log.e(TAG, "Error creating user or setting initial balances", e)
+                handleError(e, "Failed to create user or set initial balances")
+            } finally {
+                _isLoading.value = false
             }
         }
     }
-    
+
     private fun observeUserAndBalances(userId: Long) {
         viewModelScope.launch {
             try {
                 // Collect user data
-                userRepository.getUser(userId).collectLatest { user ->
+                userUseCase.getUser(userId).collectLatest { user ->
                     _userWithBalances.value = _userWithBalances.value.copy(user = user)
                     Log.d(TAG, "Updated user: $user")
                 }
             } catch (e: Exception) {
-                Log.e(TAG, "Error observing user", e)
+                handleError(e, "Failed to load user data")
             }
         }
-        
+
         viewModelScope.launch {
             try {
                 // Collect balances
-                userRepository.getBalances(userId).collectLatest { balances ->
+                userUseCase.getBalances(userId).collectLatest { balances ->
                     _userWithBalances.value = _userWithBalances.value.copy(balances = balances)
                     Log.d(TAG, "Updated balances: $balances")
                 }
             } catch (e: Exception) {
-                Log.e(TAG, "Error observing balances", e)
+                handleError(e, "Failed to load balance data")
             }
         }
     }
@@ -143,13 +161,13 @@ class CurrencyExchangerViewModel @Inject constructor(
                 val fromBalance = currentBalances[fromCurrency]?.amount ?: 0.0
                 var toBalance = currentBalances[toCurrency]?.amount ?: 0.0
 
-                // Calculate exchange rate (convert both to EUR first, then to target)
-                val fromRate = rates[fromCurrency] ?: 1.0  // If fromCurrency is EUR, rate is 1.0
-                val toRate = rates[toCurrency] ?: 1.0      // If toCurrency is EUR, rate is 1.0
-
-                // Calculate amount in EUR first, then to target currency
-                val amountInEur = amount / fromRate
-                val receivedAmount = amountInEur * toRate
+                // Calculate the received amount using the use case
+                val receivedAmount = currencyExchangeUseCase.calculateExchangeAmount(
+                    fromCurrency = fromCurrency,
+                    toCurrency = toCurrency,
+                    amount = amount,
+                    rates = rates
+                )
 
                 // Update balances
                 val updatedFromBalance = fromBalance - amount
@@ -166,7 +184,7 @@ class CurrencyExchangerViewModel @Inject constructor(
                     val newBalances = mutableMapOf<String, Double>()
                     newBalances[fromCurrency] = updatedFromBalance
                     newBalances[toCurrency] = updatedToBalance
-                    userRepository.updateBalances(userId, newBalances)
+                    userUseCase.updateBalances(userId, newBalances)
                 }
 
                 Log.d(TAG, "Exchange successful: $amount $fromCurrency -> $receivedAmount $toCurrency")
@@ -180,5 +198,12 @@ class CurrencyExchangerViewModel @Inject constructor(
 
     companion object {
         const val TAG = "CurrencyExchangerVM"
+        sealed class ErrorState(
+            open val message: String
+        ) {
+            data class NetworkError(override val message: String) : ErrorState(message)
+            data class DatabaseError(override val message: String) : ErrorState(message)
+            data class UnknownError(override val message: String) : ErrorState(message)
+        }
     }
 }

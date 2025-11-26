@@ -17,4 +17,10 @@
     <string name="error_insufficient_balance">Insufficient balance. Available: %1$s %2$s</string>
     <string name="error_exchange_failed">Exchange failed. Please try again.</string>
     <string name="success_exchange">Exchange successful!</string>
+    <string name="loading">Loading...</string>
+    <string name="error_title">Error</string>
+    <string name="ok">OK</string>
+    <string name="error_network">Network error. Please check your internet connection and try again.</string>
+    <string name="error_database">Database error. Please try again later.</string>
+    <string name="error_unknown">An unexpected error occurred. Please try again.</string>
 </resources>

@@ -62,4 +62,19 @@ class UserRepositoryImpl @Inject constructor(
             }
         }
     }
+    
+    override suspend fun updateUser(userId: Long, firstName: String, lastName: String) {
+        // First get the existing user
+        val currentUser = userDao.getUserById(userId).collect { user ->
+            user?.let {
+                // Update the user with new values
+                val updatedUser = it.copy(
+                    firstName = firstName,
+                    lastName = lastName
+                )
+                // Save the updated user
+                userDao.updateUser(updatedUser)
+            }
+        }
+    }
 }

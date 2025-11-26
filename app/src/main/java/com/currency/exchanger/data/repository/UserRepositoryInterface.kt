@@ -12,4 +12,5 @@ interface UserRepository {
     suspend fun updateBalance(userId: Long, currency: String, amount: Double)
     suspend fun updateBalances(userId: Long, newBalances: Map<String, Double>)
     suspend fun getBalance(userId: Long, currency: String): Balance?
+    suspend fun updateUser(userId: Long, firstName: String, lastName: String)
 }
